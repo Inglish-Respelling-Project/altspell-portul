@@ -1,5 +1,5 @@
 '''
-    Altspell  Portul plugin for altspell.
+    Altspell-Portul  Portul plugin for altspell.
     Copyright (C) 2024  Nicholas Johnson
 
     This program is free software: you can redistribute it and/or modify

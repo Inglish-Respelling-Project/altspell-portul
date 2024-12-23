@@ -1,3 +1,3 @@
-# Altspell-Soundspel
+# Altspell Portul
 
-Soundspel plugin for altspell.
+Portul plugin for altspell.
