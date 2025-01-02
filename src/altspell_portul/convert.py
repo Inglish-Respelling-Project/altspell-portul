@@ -35,21 +35,26 @@ class Dictionary:
                 portul = row[1]
 
                 if fwd:
-                    self.dict[tradspell] = portul
+                    pos = row[3]
+                    if pos == '':
+                        pos = None
+
+                    self.dict[(tradspell, pos)] = portul
                 else:
                     self.dict[portul] = tradspell
 
 class Converter:
     try:
         # Load spaCy without any unnecessary components
-        _nlp = spacy.load('en_core_web_sm', enable=['tokenizer'])
+        _nlp = spacy.load('en_core_web_sm', enable=['tokenizer', 'tagger'])
     except OSError:
         from spacy.cli import download
         download('en_core_web_sm')
-        _nlp = spacy.load('en_core_web_sm', enable=['tokenizer'])
+        _nlp = spacy.load('en_core_web_sm', enable=['tokenizer', 'tagger'])
 
     def __init__(self, fwd: bool):
-        self._dict = Dictionary(fwd)
+        self._fwd = fwd
+        self._dict = Dictionary(self._fwd)
 
     def convert_para(self, text: str) -> str:
         out_tokens = []
@@ -58,17 +63,54 @@ class Converter:
         for token in doc:
             token_lower = token.text.lower()
 
-            if token_lower in self._dict.dict:
-                if token.text[0].isupper():
-                    word = self._dict.dict[token_lower]
-                    word = word[0].upper() + word[1:]
-                    out_tokens.append(word)
+            if self._fwd:
+                pos = token.pos_
+                match pos:
+                    case 'NOUN':
+                        pos = 'n'
+                    case 'VERB':
+                        pos = 'v'
+                    case 'ADJ':
+                        pos = 'adj'
+                    case 'ADV':
+                        pos = 'adv'
+                    case 'INTJ':
+                        pos = 'interj'
+                    case _:
+                        pos = None
+
+                if (token_lower, None) in self._dict.dict:
+                    if token.text[0].isupper():
+                        word = self._dict.dict[(token_lower, None)]
+                        word = word[0].upper() + word[1:]
+                        out_tokens.append(word)
+                    else:
+                        out_tokens.append(self._dict.dict[(token_lower, None)])
+                elif (token_lower, pos) in self._dict.dict:
+                    if token.text[0].isupper():
+                        word = self._dict.dict[(token_lower, pos)]
+                        word = word[0].upper() + word[1:]
+                        out_tokens.append(word)
+                    else:
+                        out_tokens.append(self._dict.dict[(token_lower, pos)])
+                elif (token.text, None) in self._dict.dict:
+                    out_tokens.append(self._dict.dict[(token.text, None)])
+                elif (token.text, pos) in self._dict.dict:
+                    out_tokens.append(self._dict.dict[(token.text, pos)])
                 else:
-                    out_tokens.append(self._dict.dict[token_lower])
-            elif token.text in self._dict.dict:
-                out_tokens.append(self._dict.dict[token.text])
+                    out_tokens.append(token.text)
             else:
-                out_tokens.append(token.text)
+                if token_lower in self._dict.dict:
+                    if token.text[0].isupper():
+                        word = self._dict.dict[token_lower]
+                        word = word[0].upper() + word[1:]
+                        out_tokens.append(word)
+                    else:
+                        out_tokens.append(self._dict.dict[token_lower])
+                elif token.text in self._dict.dict:
+                    out_tokens.append(self._dict.dict[token.text])
+                else:
+                    out_tokens.append(token.text)
 
             out_tokens.append(token.whitespace_)
 
