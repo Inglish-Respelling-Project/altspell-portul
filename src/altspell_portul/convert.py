@@ -63,6 +63,14 @@ class Converter:
         download('en_core_web_sm')
         _nlp = spacy.load('en_core_web_sm', enable=['tokenizer', 'tagger'])
 
+def _process_lowercase_key(token, key, dictionary, out_tokens):
+    if token.text[0].isupper():
+        word = dictionary.dict[key]
+        word = word[0].upper() + word[1:]
+        out_tokens.append(word)
+    else:
+        out_tokens.append(dictionary.dict[key])
+
 class FwdConverter(Converter):
     _dict = FwdDictionary()
 
@@ -89,19 +97,9 @@ class FwdConverter(Converter):
                     pos = None
 
             if (token_lower, None) in self._dict.dict:
-                if token.text[0].isupper():
-                    word = self._dict.dict[(token_lower, None)]
-                    word = word[0].upper() + word[1:]
-                    out_tokens.append(word)
-                else:
-                    out_tokens.append(self._dict.dict[(token_lower, None)])
+                _process_lowercase_key(token, (token_lower, None), self._dict, out_tokens)
             elif (token_lower, pos) in self._dict.dict:
-                if token.text[0].isupper():
-                    word = self._dict.dict[(token_lower, pos)]
-                    word = word[0].upper() + word[1:]
-                    out_tokens.append(word)
-                else:
-                    out_tokens.append(self._dict.dict[(token_lower, pos)])
+                _process_lowercase_key(token, (token_lower, pos), self._dict, out_tokens)
             elif (token.text, None) in self._dict.dict:
                 out_tokens.append(self._dict.dict[(token.text, None)])
             elif (token.text, pos) in self._dict.dict:
@@ -124,12 +122,7 @@ class RevConverter(Converter):
             token_lower = token.text.lower()
 
             if token_lower in self._dict.dict:
-                if token.text[0].isupper():
-                    word = self._dict.dict[token_lower]
-                    word = word[0].upper() + word[1:]
-                    out_tokens.append(word)
-                else:
-                    out_tokens.append(self._dict.dict[token_lower])
+                _process_lowercase_key(token, token_lower, self._dict, out_tokens)
             elif token.text in self._dict.dict:
                 out_tokens.append(self._dict.dict[token.text])
             else:
