@@ -21,6 +21,7 @@ from importlib.resources import files
 from altspell.plugin.PluginBase import nlp
 from . import data
 
+
 class FwdDictionary:
     def __init__(self):
         self.dict = {}
