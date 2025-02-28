@@ -26,7 +26,7 @@ class Plugin(PluginBase):
         self._rev_translator = RevTranslator()
 
     def translate_to_respelling(self, traditional_text: str) -> str:
-        return self._fwd_converter.convert_para(traditional_text)
+        return self._fwd_translator.translate_para(traditional_text)
 
     def translate_to_traditional_spelling(self, respelled_text: str) -> str:
-        return self._rev_converter.convert_para(respelled_text)
+        return self._rev_translator.translate_para(respelled_text)
